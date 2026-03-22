@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #0D0D12;
+  --bg-secondary: #1A1A24;
+  --bg-surface: #252532;
+  --accent-primary: #00FFAA;
+  --accent-secondary: #FF3366;
+  --accent-tertiary: #FFD700;
+  --accent-blue: #00D4FF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8888AA;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #353545;
+}
+
+/* Animations */
+@keyframes beat-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes wave {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-beat {
+  animation: beat-pulse 0.1s ease-out;
+}
+
+.animate-glow {
+  animation: glow-pulse 1s ease-in-out infinite;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(26, 26, 36, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Knob styles */
+.knob {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.knob::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--accent-primary);
+}
+
+/* Pad hit effect */
+.pad-hit {
+  transform: scale(0.95);
+  transition: transform 0.05s ease-out;
+}
+
+.pad-hit:not(:active) {
+  transform: scale(1);
+  transition: transform 0.15s ease-out;
+}
+
+/* Step sequencer grid */
+.step-on {
+  background-color: var(--step-color, var(--accent-primary));
+  box-shadow: 0 0 10px var(--step-color, var(--accent-primary));
+}
+
+.step-off {
+  background-color: var(--bg-surface);
+}
+
+/* Waveform canvas */
+.waveform-container {
+  position: relative;
+  background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+}
+
+/* VU Meter segments */
+.vu-segment {
+  width: 4px;
+  height: 3px;
+  margin: 1px;
+  border-radius: 1px;
+  transition: background-color 0.05s;
+}
+
+.vu-green { background-color: #00FFAA; }
+.vu-yellow { background-color: #FFD700; }
+.vu-red { background-color: #FF3366; }
+.vu-off { background-color: #252532; }
