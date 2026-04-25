@@ -1,0 +1,18 @@
+{
+  "name": "BeatForge 智能鼓机",
+  "short_name": "BeatForge",
+  "description": "全平台智能鼓机伴奏软件",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0D12",
+  "theme_color": "#0D0D12",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%230D0D12'/><circle cx='256' cy='256' r='150' fill='%2300FFAA'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
