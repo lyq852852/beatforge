@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>测试</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0D0D12;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh}
+.ov{position:fixed;inset:0;background:#0D0D12;display:flex;align-items:center;justify-content:center;z-index:1000;flex-direction:column;gap:20px}
+.ov.hide{display:none}
+button{padding:1.2rem 3rem;font-size:1.5rem;background:#00FFAA;color:#0D0D12;border:none;border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+</style>
+</head>
+<body>
+<div class="ov" id="ov">
+<h1>BeatForge</h1>
+<p>测试按钮能否点击</p>
+<button id="btn" onclick="go()">🎵 点击我</button>
+</div>
+<script>
+function go(){document.getElementById('ov').classList.add('hide');document.body.innerHTML='<h1 style="text-align:center;margin-top:40vh">✅ 按钮有效！</h1><p style="text-align:center;margin-top:20px">问题出在主页面代码</p>'}
+</script>
+</body>
+</html>
