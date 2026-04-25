@@ -257,7 +257,7 @@
     <div class="init-content">
       <h1>BeatForge</h1>
       <p data-i18n="initSubtitle"></p>
-      <button class="init-btn" id="initBtn" onclick="initAudio()" ontouchstart="this.click();event.preventDefault();">🎵 <span data-i18n="initBtn"></span></button>
+      <button class="init-btn" id="initBtn">🎵 <span data-i18n="initBtn"></span></button>
       <p class="init-hint" data-i18n="initHint"></p>
     </div>
   </div>
@@ -1723,9 +1723,13 @@
       updateActiveCount();
       setupTouchHandlers();
 
-      // Mobile: any touch on overlay triggers init
+      // Init button: touch + click + pointer events for max compatibility
+      const initBtn = document.getElementById('initBtn');
+      initBtn.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
+      initBtn.addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
+      // Fallback: any touch/click on overlay also triggers init
       document.getElementById('initOverlay').addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
-      document.getElementById('initOverlay').addEventListener('click', () => initAudio());
+      document.getElementById('initOverlay').addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
 
       if (!window.AudioContext && !window.webkitAudioContext) {
         document.getElementById('statusDot').style.background = 'var(--accent-secondary)';
