@@ -52,7 +52,7 @@
     .init-content { text-align:center; }
     .init-content h1 { font-family:'Orbitron',sans-serif; font-size:4rem; font-weight:900; background:linear-gradient(135deg,var(--accent-primary),var(--accent-blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:.5rem; }
     .init-content p { color:var(--text-secondary); font-size:1.25rem; margin-bottom:2rem; }
-    .init-btn { padding:1rem 3rem; font-size:1.25rem; font-weight:600; background:var(--accent-primary); color:var(--bg-primary); border:none; border-radius:.75rem; cursor:pointer; transition: transform .2s, box-shadow .2s; }
+    .init-btn { padding:1rem 3rem; font-size:1.25rem; font-weight:600; background:var(--accent-primary); color:var(--bg-primary); border:none; border-radius:.75rem; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; transition: transform .2s, box-shadow .2s; }
     .init-btn:hover { transform:scale(1.05); box-shadow:0 0 30px rgba(0,255,170,.4); }
     .init-hint { margin-top:1rem; color:var(--text-secondary); font-size:.875rem; }
 
@@ -257,7 +257,7 @@
     <div class="init-content">
       <h1>BeatForge</h1>
       <p data-i18n="initSubtitle"></p>
-      <button class="init-btn" id="initBtn">🎵 <span data-i18n="initBtn"></span></button>
+      <button class="init-btn" id="initBtn" onclick="initAudio()">🎵 <span data-i18n="initBtn"></span></button>
       <p class="init-hint" data-i18n="initHint"></p>
     </div>
   </div>
