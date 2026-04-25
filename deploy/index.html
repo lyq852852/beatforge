@@ -1710,26 +1710,34 @@
 
     // ==================== INIT ====================
     function init() {
-      // Detect system language
-      currentLang = detectLang();
-      setLang(currentLang);
-      renderDrumGrid();
-      renderSequencer();
-      renderMixer();
-      renderStyleGrid();
-      renderParams();
-      renderQuickPresets();
-      renderSavedPatterns();
-      updateActiveCount();
-      setupTouchHandlers();
-
-      // Init button: touch + click + pointer events for max compatibility
+      // --- Bind init overlay events FIRST (before anything can fail) ---
       const initBtn = document.getElementById('initBtn');
-      initBtn.addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
-      initBtn.addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
-      // Fallback: any touch/click on overlay also triggers init
-      document.getElementById('initOverlay').addEventListener('touchstart', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
-      document.getElementById('initOverlay').addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
+      const initOverlay = document.getElementById('initOverlay');
+      if (initBtn) {
+        initBtn.addEventListener('touchend', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
+        initBtn.addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
+      }
+      if (initOverlay) {
+        initOverlay.addEventListener('touchend', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
+        initOverlay.addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
+      }
+
+      // --- Now initialize the app (safe to fail) ---
+      try {
+        currentLang = detectLang();
+        setLang(currentLang);
+        renderDrumGrid();
+        renderSequencer();
+        renderMixer();
+        renderStyleGrid();
+        renderParams();
+        renderQuickPresets();
+        renderSavedPatterns();
+        updateActiveCount();
+        setupTouchHandlers();
+      } catch (err) {
+        console.error('Init error:', err);
+      }
 
       if (!window.AudioContext && !window.webkitAudioContext) {
         document.getElementById('statusDot').style.background = 'var(--accent-secondary)';
