@@ -250,6 +250,25 @@
       .style-grid { grid-template-columns:repeat(2,1fr); }
     }
   </style>
+  <script>
+    function initAudio(){try{document.getElementById('initOverlay').classList.add('hidden')}catch(e){}}
+    window.addEventListener('load',function(){
+      // If user already tapped and overlay is hidden, run full init
+      var overlay=document.getElementById('initOverlay');
+      if(overlay&&overlay.classList.contains('hidden')&&typeof window._fullInit==='function'){
+        window._fullInit();
+      }
+      if(overlay&&!overlay.classList.contains('hidden')){
+        var b=document.getElementById('initBtn');
+        if(b){
+          b.addEventListener('touchstart',function(e){e.preventDefault();if(typeof window._fullInit==='function')window._fullInit();else initAudio()},{passive:false});
+          b.addEventListener('click',function(){if(typeof window._fullInit==='function')window._fullInit();else initAudio()});
+        }
+        overlay.addEventListener('touchstart',function(){if(typeof window._fullInit==='function')window._fullInit();else initAudio()},{passive:false});
+        overlay.addEventListener('click',function(){if(typeof window._fullInit==='function')window._fullInit();else initAudio()});
+      }
+    });
+  </script>
 </head>
 <body>
   <!-- Init Overlay -->
@@ -768,6 +787,7 @@
     // ==================== AUDIO ENGINE ====================
     function initAudio() {
       if (isReady) return;
+      window._fullInit = initAudio;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive', sampleRate: 44100 });
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.8;
