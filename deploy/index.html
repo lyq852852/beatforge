@@ -130,7 +130,21 @@
     /* Metronome */
     .metro-btn { padding:.5rem 1rem; border:2px solid var(--accent-blue); border-radius:.5rem; background:transparent; color:var(--accent-blue); font-size:.75rem; font-weight:600; cursor:pointer; transition:all .15s; text-transform:uppercase; letter-spacing:.05em; }
     .metro-btn:hover { background:rgba(0,212,255,.1); }
-    .metro-btn.on { background:rgba(0,212,255,.2); }
+    
+    .metro-panel {
+      display:none; flex-wrap:wrap; gap:.5rem; align-items:center;
+      background:rgba(0,212,255,.06); border:1px solid rgba(0,212,255,.25);
+      border-radius:.75rem; padding:.75rem 1rem; margin-top:.5rem;
+    }
+    .metro-panel.open { display:flex; }
+    .metro-ctrl { display:flex; align-items:center; gap:.4rem; font-size:.7rem; color:var(--text-dim); white-space:nowrap; }
+    .metro-ctrl label { color:var(--accent-blue); font-weight:600; min-width:3rem; }
+    .metro-ctrl input[type=range] { width:70px; accent-color:var(--accent-blue); }
+    .metro-ctrl span { min-width:2rem; text-align:right; font-variant-numeric:tabular-nums; }
+    .metro-sign { font-size:.65rem; padding:2px 6px; border-radius:4px; border:1px solid rgba(0,212,255,.3); color:var(--accent-blue); cursor:pointer; background:transparent; }
+    .metro-sign.active { background:rgba(0,212,255,.2); }
+    .metro-vol-icon { font-size:.9rem; }
+.metro-btn.on { background:rgba(0,212,255,.2); }
 
     /* Swing */
     .swing-control { display:flex; flex-direction:column; gap:.5rem; width:100%; }
@@ -251,7 +265,7 @@
     }
   </style>
   <script>
-    function initAudio(){try{document.getElementById('initOverlay').classList.add('hidden')}catch(e){}}
+    function _dismissOverlay(){try{document.getElementById('initOverlay').classList.add('hidden')}catch(e){}}
     window.addEventListener('load',function(){
       // If user already tapped and overlay is hidden, run full init
       var overlay=document.getElementById('initOverlay');
@@ -276,7 +290,7 @@
     <div class="init-content">
       <h1>BeatForge</h1>
       <p data-i18n="initSubtitle"></p>
-      <button class="init-btn" id="initBtn" onclick="initAudio()">🎵 <span data-i18n="initBtn"></span></button>
+      <button class="init-btn" id="initBtn" onclick="_dismissOverlay()">🎵 <span data-i18n="initBtn"></span></button>
       <p class="init-hint" data-i18n="initHint"></p>
     </div>
   </div>
@@ -358,7 +372,33 @@
               </button>
             </div>
             <button class="tap-btn" onclick="tapTempo()" title="Tap Tempo (T)"><span data-i18n="tapTempo">敲击</span></button>
-            <button class="metro-btn" id="metroBtn" onclick="toggleMetronome()">🔔 <span data-i18n="metronome"></span></button>
+            <button class="metro-btn" id="metroBtn" onclick="toggleMetronome();toggleMetroPanel()">🔔 <span data-i18n="metronome"></span></button>
+        <div class="metro-panel" id="metroPanel">
+          <div class="metro-ctrl">
+            <label><span class="metro-vol-icon">🔊</span></label>
+            <input type="range" id="metroVol" min="0" max="100" value="50"
+                   oninput="setMetroVol(this.value)">
+            <span id="metroVolVal">50</span>
+          </div>
+          <div class="metro-ctrl">
+            <label>音高</label>
+            <input type="range" id="metroPitch" min="400" max="2000" value="1200"
+                   oninput="setMetroPitch(this.value)">
+            <span id="metroPitchVal">1200</span>
+          </div>
+          <div class="metro-ctrl">
+            <label>音色</label>
+            <button class="metro-sign active" id="msig-tick" onclick="setMetroSound('tick')">叮</button>
+            <button class="metro-sign" id="msig-wood" onclick="setMetroSound('wood')">木</button>
+            <button class="metro-sign" id="msig-bell" onclick="setMetroSound('bell')">铃</button>
+          </div>
+          <div class="metro-ctrl">
+            <label>拍号</label>
+            <button class="metro-sign active" id="msig-4" onclick="setMetroSign(4)">4/4</button>
+            <button class="metro-sign" id="msig-3" onclick="setMetroSign(3)">3/4</button>
+            <button class="metro-sign" id="msig-6" onclick="setMetroSign(6)">6/8</button>
+          </div>
+        </div>
           </div>
           <div class="progress-container">
             <div class="progress-label">
@@ -702,8 +742,6 @@
     };
 
     // 每个鼓的当前音色
-    let drumVoices = {};
-    DRUMS.forEach(d => drumVoices[d.id] = 'electronic');
 
     const DRUMS = [
       { id:'kick',    name:'Kick',     color:'#FF6B35', icon:'🥁' },
@@ -716,6 +754,8 @@
       { id:'ride',    name:'Ride',     color:'#00C9A7', icon:'🔔' },
     ];
 
+    let drumVoices = {};
+    DRUMS.forEach(d => drumVoices[d.id] = 'electronic');
     const STYLES = [
       { id:'pop',      icon:'🎤' },
       { id:'rock',     icon:'🎸' },
@@ -753,6 +793,11 @@
     let density = 3;
     let dynamics = 3;
     let metronomeOn = false;
+    let metroVol = 50;
+    let metroPitch = 1200;   // Hz for downbeat
+    let metroPitch2 = 800;   // Hz for non-downbeat
+    let metroSound = 'tick';  // tick | wood | bell
+    let metroSign = 4;        // beats per bar
     let isRecording = false;
     let mediaRecorder = null;
     let recordedChunks = [];
@@ -787,7 +832,6 @@
     // ==================== AUDIO ENGINE ====================
     function initAudio() {
       if (isReady) return;
-      window._fullInit = initAudio;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive', sampleRate: 44100 });
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.8;
@@ -907,14 +951,39 @@
 
     function playClick(time, isDownbeat) {
       if (!metronomeOn || !audioCtx) return;
-      const osc = audioCtx.createOscillator();
+      const vol = metroVol / 100 * 0.3;
+      const freq = isDownbeat ? metroPitch : metroPitch2;
       const env = audioCtx.createGain();
-      osc.frequency.value = isDownbeat ? 1200 : 800;
-      env.gain.setValueAtTime(0.15, time);
-      env.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
-      osc.connect(env); env.connect(masterGain);
-      osc.start(time); osc.stop(time + 0.05);
-      osc.onended = () => { osc.disconnect(); env.disconnect(); };
+      env.gain.setValueAtTime(vol, time);
+      env.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+      if (metroSound === 'bell') {
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        osc1.type = 'sine'; osc2.type = 'sine';
+        osc1.frequency.value = freq; osc2.frequency.value = freq * 2.756;
+        osc1.connect(env); osc2.connect(env); env.connect(masterGain);
+        osc1.start(time); osc2.start(time);
+        osc1.stop(time + 0.15); osc2.stop(time + 0.15);
+        osc1.onended = () => { osc1.disconnect(); osc2.disconnect(); env.disconnect(); };
+      } else if (metroSound === 'wood') {
+        const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.02, audioCtx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+        const src = audioCtx.createBufferSource();
+        const bp = audioCtx.createBiquadFilter();
+        bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = 1;
+        src.buffer = buf; src.connect(bp); bp.connect(env); env.connect(masterGain);
+        src.start(time); src.onended = () => { src.disconnect(); bp.disconnect(); env.disconnect(); };
+      } else {
+        // tick - short click
+        const osc = audioCtx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.value = freq;
+        osc.connect(env); env.connect(masterGain);
+        osc.start(time); osc.stop(time + 0.05);
+        osc.onended = () => { osc.disconnect(); env.disconnect(); };
+      }
     }
 
     // ==================== LOOKAHEAD SCHEDULER ====================
@@ -1071,6 +1140,37 @@
       const btn = document.getElementById('metroBtn');
       btn.classList.toggle('on', metronomeOn);
       showToast(metronomeOn ? t('metronomeOn') : t('metronomeOff'));
+    }
+
+    function toggleMetroPanel() {
+      const panel = document.getElementById('metroPanel');
+      panel.classList.toggle('open');
+    }
+
+    function setMetroVol(v) {
+      metroVol = +v;
+      document.getElementById('metroVolVal').textContent = v;
+    }
+
+    function setMetroPitch(v) {
+      metroPitch = +v;
+      metroPitch2 = Math.round(v * 0.67);
+      document.getElementById('metroPitchVal').textContent = v;
+    }
+
+    function setMetroSound(s) {
+      metroSound = s;
+      document.getElementById('msig-tick').classList.remove('active');
+      document.getElementById('msig-wood').classList.remove('active');
+      document.getElementById('msig-bell').classList.remove('active');
+      document.getElementById('msig-' + s).classList.add('active');
+    }
+
+    function setMetroSign(n) {
+      metroSign = n;
+      [2,3,4,6].forEach(x => { const b = document.getElementById('msig-'+x); if(b) b.classList.remove('active'); });
+      const el = document.getElementById('msig-'+n);
+      if(el) el.classList.add('active');
     }
 
     // ==================== DRUM GRID ====================
@@ -1775,6 +1875,23 @@
     }
 
     document.addEventListener('DOMContentLoaded', init);
-  </script>
+  
+// Bridge: onclick='_dismissOverlay()' -> also trigger full initAudio
+// Keep the original full initAudio accessible under a temp name
+var _realInitAudio = null;
+// Overwrite: when initAudio is called, it triggers real init + dismiss
+function _dismissOverlay(){try{document.getElementById('initOverlay').classList.add('hidden')}catch(e){}}
+function _startApp(){try{initAudio()}catch(e){console.warn('initAudio failed:',e)}_dismissOverlay()}
+// Update onclick references to use _startApp
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('initBtn');
+  if(btn){ btn.setAttribute('onclick',''); btn.onclick=_startApp; }
+  // Also handle touch events
+  if(btn){
+    btn.addEventListener('touchstart',function(e){e.preventDefault();_startApp()},{passive:false});
+    btn.addEventListener('click',_startApp);
+  }
+});
+</script>
 </body>
 </html>
