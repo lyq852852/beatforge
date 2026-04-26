@@ -265,22 +265,22 @@
     }
   </style>
   <script>
-    function _dismissOverlay(){try{document.getElementById('initOverlay').classList.add('hidden')}catch(e){}}
-    window.addEventListener('load',function(){
-      // If user already tapped and overlay is hidden, run full init
-      var overlay=document.getElementById('initOverlay');
-      if(overlay&&overlay.classList.contains('hidden')&&typeof window._fullInit==='function'){
+    // Stub - will be replaced by the real initAudio below
+    window._fullInit = function(){ console.warn('Not yet initialized') };
+    // Set up button + overlay events immediately (before DOMContentLoaded)
+    document.addEventListener('DOMContentLoaded', function(){
+      var btn = document.getElementById('initBtn');
+      var overlay = document.getElementById('initOverlay');
+      function doInit(){
+        if(!overlay.classList.contains('hidden')) overlay.classList.add('hidden');
         window._fullInit();
       }
-      if(overlay&&!overlay.classList.contains('hidden')){
-        var b=document.getElementById('initBtn');
-        if(b){
-          b.addEventListener('touchstart',function(e){e.preventDefault();if(typeof window._fullInit==='function')window._fullInit();else initAudio()},{passive:false});
-          b.addEventListener('click',function(){if(typeof window._fullInit==='function')window._fullInit();else initAudio()});
-        }
-        overlay.addEventListener('touchstart',function(){if(typeof window._fullInit==='function')window._fullInit();else initAudio()},{passive:false});
-        overlay.addEventListener('click',function(){if(typeof window._fullInit==='function')window._fullInit();else initAudio()});
+      if(btn){
+        btn.addEventListener('touchstart', function(e){ e.preventDefault(); doInit(); }, {passive:false});
+        btn.addEventListener('click', doInit);
       }
+      overlay.addEventListener('touchstart', function(e){ e.preventDefault(); doInit(); }, {passive:false});
+      overlay.addEventListener('click', doInit);
     });
   </script>
 </head>
@@ -290,7 +290,7 @@
     <div class="init-content">
       <h1>BeatForge</h1>
       <p data-i18n="initSubtitle"></p>
-      <button class="init-btn" id="initBtn" onclick="_dismissOverlay()">🎵 <span data-i18n="initBtn"></span></button>
+      <button class="init-btn" id="initBtn" >🎵 <span data-i18n="initBtn"></span></button>
       <p class="init-hint" data-i18n="initHint"></p>
     </div>
   </div>
@@ -834,6 +834,8 @@
     // ==================== AUDIO ENGINE ====================
     function initAudio() {
       if (isReady) return;
+      // Point the bridge at this real implementation
+      window._fullInit = initAudio;
       audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive', sampleRate: 44100 });
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.8;
@@ -1833,16 +1835,7 @@
     // ==================== INIT ====================
     function init() {
       // --- Bind init overlay events FIRST (before anything can fail) ---
-      const initBtn = document.getElementById('initBtn');
-      const initOverlay = document.getElementById('initOverlay');
-      if (initBtn) {
-        initBtn.addEventListener('touchend', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
-        initBtn.addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
-      }
-      if (initOverlay) {
-        initOverlay.addEventListener('touchend', (e) => { e.preventDefault(); initAudio(); }, { passive: false });
-        initOverlay.addEventListener('click', (e) => { e.preventDefault(); initAudio(); });
-      }
+      // init button + overlay events are handled in head <script> via window._fullInit
 
       // --- Now initialize the app (safe to fail) ---
       try {
@@ -1877,23 +1870,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', init);
-  
-// Bridge: onclick='_dismissOverlay()' -> also trigger full initAudio
-// Keep the original full initAudio accessible under a temp name
-var _realInitAudio = null;
-// Overwrite: when initAudio is called, it triggers real init + dismiss
-function _dismissOverlay(){try{document.getElementById('initOverlay').classList.add('hidden')}catch(e){}}
-function _startApp(){try{initAudio()}catch(e){console.warn('initAudio failed:',e)}_dismissOverlay()}
-// Update onclick references to use _startApp
-document.addEventListener('DOMContentLoaded', function(){
-  var btn = document.getElementById('initBtn');
-  if(btn){ btn.setAttribute('onclick',''); btn.onclick=_startApp; }
-  // Also handle touch events
-  if(btn){
-    btn.addEventListener('touchstart',function(e){e.preventDefault();_startApp()},{passive:false});
-    btn.addEventListener('click',_startApp);
-  }
-});
 </script>
 </body>
 </html>
